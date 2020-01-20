@@ -15,11 +15,15 @@ mongoose.connection.once('open', () => {
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
+    name: process.env.SESSION_NAME,
     saveUninitialized: true,
     store: new MongoStore({ 
         mongooseConnection: mongoose.connection,
-        ttl: 1 * 1 * 60 * 60 // 1 hour
-    })
+    }),
+    cookie: {
+        maxAge: 1 * 1 * 60 * 60, // 1 hour
+        sameSite: false
+    }
 }))
 
 app.get('/', (req, res) => {
