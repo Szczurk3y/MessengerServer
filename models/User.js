@@ -19,6 +19,11 @@ const UsersSchema = new Schema({
         required: true,
         min: 3,
         max: 255
+    },
+    admin: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
 

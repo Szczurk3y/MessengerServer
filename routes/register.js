@@ -14,12 +14,13 @@ const registerValidation = data => {
 }
 
 router.post('/', async (req, res) => {
+    console.log(`${req.body.username}\n${req.body.email}\n${req.body.password}`);
     const { error } = registerValidation(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+    if (error) return res.send(error.details[0].message);
     const emailExists = await User.findOne({ email: req.body.email });
-    if (emailExists ) return res.status(400).send('Email already exists');
+    if (emailExists ) return res.send('Email already exists');
     const userExists = await User.findOne({ username: req.body.username });
-    if (userExists) return res.status(400).send('User already exists');
+    if (userExists) return res.send('User already exists');
 
 
     //Hashing password
@@ -34,10 +35,11 @@ router.post('/', async (req, res) => {
 
     try {
         await user.save();
-        res.send({password: user.password});
+        return res.send("Successfully registered");
     } catch(err) {
-        res.status(400).send(err);
+        return res.status(400).send(err);
     }
+
 });
 
 module.exports = router;
