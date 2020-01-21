@@ -16,7 +16,7 @@ const InvitationSchema = new Schema({
     }, 
     sendTime: {
         type: Date,
-        default: Date.now()
+        default: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
     }
 })
 

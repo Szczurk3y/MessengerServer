@@ -29,6 +29,7 @@ router.post('/', async (req, res) => {
     //TODO: add if statement for checking whether user has got invitation or not
 
     req.session.username = user.username
+
     const token = await jwt.sign({_username: req.body.username}, process.env.TOKEN_SECRET)
     res.header('auth-token', token)
 

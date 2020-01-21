@@ -14,11 +14,12 @@ mongoose.connection.once('open', () => {
 //Session configuration
 app.use(session({
     secret: process.env.SESSION_SECRET,
-    resave: false,
+    resave: true,
     name: process.env.SESSION_NAME,
-    saveUninitialized: true,
-    store: new MongoStore({ 
+    saveUninitialized: false,
+    store: new MongoStore({
         mongooseConnection: mongoose.connection,
+        collection: 'sessions'
     }),
     cookie: {
         maxAge: 1 * 1 * 60 * 60, // 1 hour
@@ -27,13 +28,13 @@ app.use(session({
 }))
 
 app.get('/', (req, res) => {
-    req.session.username = "mobile username"
-    res.send("ELO KURWA")
+    req.session.username = "siema"
+    res.send("username: siema")
 })
 //Importing routes
 const register = require('./routes/register')
 const login = require('./routes/login')
-const invite = require('./routes/invitation')
+const invite = require('./routes/invitations')
 
 //Middlewares
 app.use(express.json())
@@ -41,7 +42,7 @@ app.use(express.json())
 //Route Middlewares
 app.use('/api/user/register', register)
 app.use('/api/user/login', login)
-app.use('/api/user/invite', invite)
+app.use('/api/user/invitations', invite)
 
 const PORT = 1234
 app.listen(PORT, () => console.log(`I'm listening on port ${PORT}`))
