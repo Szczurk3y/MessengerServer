@@ -35,6 +35,7 @@ app.get('/', (req, res) => {
 const register = require('./routes/register')
 const login = require('./routes/login')
 const invite = require('./routes/invitations')
+const friend = require('./routes/friends')
 
 //Middlewares
 app.use(express.json())
@@ -43,6 +44,8 @@ app.use(express.json())
 app.use('/api/user/register', register)
 app.use('/api/user/login', login)
 app.use('/api/user/invitations', invite)
+app.use('/api/user/friends/', friend)
+
 
 const PORT = 1234
 app.listen(PORT, () => console.log(`I'm listening on port ${PORT}`))

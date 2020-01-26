@@ -33,7 +33,7 @@ router.post('/', async (req, res) => {
     const token = await jwt.sign({_username: req.body.username}, process.env.TOKEN_SECRET)
     res.header('auth-token', token)
 
-    return res.send(`You are now logged in! ${token}`)
+    return res.send(`You are now logged in!`)
 })
 
 module.exports = router;

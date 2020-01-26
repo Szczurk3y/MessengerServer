@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const Schema = mongoose.Schema;
+const Schema = mongoose.Schema
 
 const InvitationSchema = new Schema({
     sender: {
@@ -15,8 +15,8 @@ const InvitationSchema = new Schema({
         max: 25
     }, 
     sendTime: {
-        type: Date,
-        default: new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
+        type: String,
+        required: true
     }
 })
 

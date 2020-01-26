@@ -33,11 +33,12 @@ router.post('/', async (req, res) => {
         password: hashedPassword
     });
 
+
     try {
         await user.save();
         return res.send("Successfully registered");
     } catch(err) {
-        return res.status(400).send(err);
+        return res.send(err);
     }
 
 });

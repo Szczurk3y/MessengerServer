@@ -4,6 +4,8 @@ const Joi = require('@hapi/joi')
 const User = require('../models/User')
 const Invitation = require('../models/Invitation')
 
+// TODO: change posts to: delete/get/and so on...
+
 const recipientValidation = data => {
     const schema = Joi.object({
         username: Joi.string().alphanum().min(3).max(25).required(),
@@ -14,10 +16,12 @@ const recipientValidation = data => {
 }
 
 router.post('/', verify, async (req, res) => {
-    const counter = await Invitation.countDocuments({recipient: req.body.username})
-    if(counter > 0) {
-        const invitations = await Invitation.find({recipient: req.body.username})
-        res.json(invitations)
+    try {
+        const invitations = await Invitation.find({recipient: req.body.recipient})
+        console.log(invitations)
+        return res.json(invitations)
+    } catch(err) {
+        return res.send(err.message)
     }
 })
 
@@ -29,7 +33,8 @@ router.post('/invite', verify, async (req, res) => {
 
     const invitation = new Invitation({
         sender: req.body.username,
-        recipient: recipient.username
+        recipient: recipient.username,
+        sendTime: new Date().toUTCString().slice(5, 16) + ", " + new Date().toUTCString().slice(17,22)
     })
 
     try {
