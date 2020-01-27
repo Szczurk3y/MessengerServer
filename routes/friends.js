@@ -6,7 +6,6 @@ const Joi = require('@hapi/joi')
 // TODO: change posts to: delete/get/and so on...
 
 router.post('/', verify, async (req, res) => {
-    console.log("ktos jest jak cos btw")
     try {
         const friends = await Friend.find({username: req.body.username})
         console.log(friends)
