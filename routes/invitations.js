@@ -43,21 +43,38 @@ router.post('/invite', verify, async (req, res) => {
     if(error) return res.send(error.details[0].message)
     const recipient = await User.findOne({username: req.body.recipient})
     if(!recipient) return res.send("User not found")
-    const counter = await Invitation.findOne({
+    var counter = await Invitation.findOne({
         sender: req.body.sender,
         recipient: req.body.recipient
     }).countDocuments()
-    if (counter > 0) return res.send("Invitation already exists.")
+    if (counter > 0) return res.send("Invitation already exists.") 
+    counter = await Invitation.findOne({
+        sender: req.body.recipient,
+        recipient: req.body.sender
+    }).countDocuments()
+    if (counter > 0) return res.send("Check if you don't have pending invitation.")
 
     const invitation = new Invitation({
         sender: req.body.sender,
         recipient: recipient.username,
         sendTime: new Date().toUTCString().slice(5, 16) + ", " + new Date().toUTCString().slice(17,22)
     })
-
+    
     try {
         await invitation.save()
         return res.send("Invitation has been sent!")
+    } catch(err) {
+        return res.send(err)
+    }
+})
+
+router.post('/refuse', verify, async (req, res) => {
+    try {
+        await Invitation.findOneAndDelete({
+            sender: req.body.sender,
+            recipient: req.body.recipient
+        })
+        return res.send("Refused.")
     } catch(err) {
         return res.send(err)
     }

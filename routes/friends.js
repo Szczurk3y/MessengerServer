@@ -2,6 +2,7 @@ const router = require('express').Router()
 const verify = require('./verify_token')
 const Friend = require('../models/Friend')
 const Joi = require('@hapi/joi')
+const Invitation = require('../models/Invitation')
 
 // TODO: change posts to: delete/get/and so on...
 
@@ -43,7 +44,11 @@ router.post('/add', verify, async (req, res) => {
             friend: req.body.username
         })
         await friend.save()
-        return res.send("added")
+        await Invitation.findOneAndDelete({
+            sender: req.body.friend,
+            recipient: req.body.username
+        })
+        return res.send("added.")
     } catch(err) {
         return res.send(err.message)
     }
