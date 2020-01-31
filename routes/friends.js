@@ -26,7 +26,7 @@ router.post('/delete', verify, async (req, res) => {
             username: req.body.friend,
             friend: req.body.username
         })
-        return res.send("Deleted")
+        return res.send("deleted.")
     } catch(err) {
         return res.send(err.message)
     }

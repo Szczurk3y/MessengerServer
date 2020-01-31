@@ -80,4 +80,16 @@ router.post('/refuse', verify, async (req, res) => {
     }
 })
 
+router.post('/cancel', verify, async (req, res) => {
+    try {
+        await Invitation.findOneAndDelete({
+            sender: req.body.sender,
+            recipient: req.body.recipient
+        })
+        return res.send("Canceled.")
+    } catch(err) {
+        return res.send(err)
+    }
+})
+
 module.exports = router
