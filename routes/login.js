@@ -19,21 +19,23 @@ const loginValidation = data => {
 router.post('/', async (req, res) => {
     //1st step --> Checking if query has a valid body
     const { error } = loginValidation(req.body)
-    if (error) return res.send(error.details[0].message)
+    if (error) return res.json({ message: error.details[0].message })
+
     //2nd step --> Checking if user with provided username exists 
     const user = await User.findOne({ username: req.body.username })
-    if (!user) return res.send("User not found")
+    if (!user) return res.json({ message: "User not found" })
+
     //3rd step --> Comparing passwords
-    const valid_passwords = bcrypt.compare(user.password, req.body.password)
-    if (!valid_passwords) return res.send("Wrong password")
-    //TODO: add if statement for checking whether user has got invitation or not
-
-    req.session.username = user.username
-
+    const valid_passwords = await bcrypt.compare(req.body.password, user.password) //first argument must be a 'what password is given' and the second argument is like 'stored(correct) password'. If it's swapped, comparison wouldn't work 
+    if (!valid_passwords) return res.json({ message: "Wrong password" })
+    
     const token = await jwt.sign({_username: req.body.username}, process.env.TOKEN_SECRET)
     res.header('auth-token', token)
-
-    return res.send(`You are now logged in!`)
+    return res.json({
+        message: "You are now logged in!",
+        isLogged: true,
+        token: token
+    })
 })
 
 module.exports = router;
