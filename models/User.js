@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+const mongoose = require('mongoose')
+const Schema = mongoose.Schema
+const multer = require('multer')
 
 const UsersSchema = new Schema({
     username: {
@@ -24,6 +25,11 @@ const UsersSchema = new Schema({
         type: Boolean,
         required: false,
         default: false
+    },
+    userImage: {
+        type: String,
+        required: false,
+        default: ""
     }
 });
 
