@@ -2,6 +2,7 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
 const session = require('express-session')
+const fs = require('fs')
 const MongoStore = require('connect-mongo')(session)
 require('dotenv').config()
 
@@ -36,7 +37,7 @@ const register = require('./routes/register')
 const login = require('./routes/login')
 const invite = require('./routes/invitations')
 const friend = require('./routes/friends')
-const profile = require('./routes/profile')
+const update = require('./routes/update')
 
 //Middlewares
 app.use(express.json())
@@ -47,8 +48,9 @@ app.use('/api/user/register', register)
 app.use('/api/user/login', login)
 app.use('/api/user/invitations', invite)
 app.use('/api/user/friends', friend)
-app.use('/api/user/profile', profile)
+app.use('/api/user/update', update)
 
 
 const PORT = 1234
+ 
 app.listen(PORT, () => console.log(`I'm listening on port ${PORT}`))

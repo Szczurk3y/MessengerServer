@@ -1,38 +1,38 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
-const multer = require('multer')
 
-const UsersSchema = new Schema({
+const RegisteredUser = new Schema({
     username: {
         type: String,
         required: true,
         min: 3,
         max: 25
     },
-    email: {
-        type: String,
-        required: true,
-        min: 3,
-        max: 255
-    },
     password: {
         type: String,
-        required: true,
+        required: false, // is required only during Login and Registration by Joi.required()
         min: 3,
         max: 255
     },
-    admin: {
-        type: Boolean,
-        required: false,
-        default: false
+    email: {
+        type: String,
+        required: false, // is required only during registration by Joi.required()
+        min: 3,
+        max: 255
     },
     userImage: {
         type: String,
         required: false,
         default: ""
+    },
+    admin: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 });
 
-const User = mongoose.model('User', UsersSchema);
+
+const User = mongoose.model('User', RegisteredUser);
 
 module.exports = User;
