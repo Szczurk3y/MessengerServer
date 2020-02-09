@@ -7,6 +7,7 @@ const fs = require('fs')
 const User = require('../models/User')
 const Friends = require('../models/Friend')
 const Invitations = require('../models/Invitation')
+const bcrypt = require('bcryptjs')
 
 
 var storage = multer.diskStorage({
@@ -65,7 +66,6 @@ router.patch('/', verify, upload.single('userImage'), async (req, res) => {
     }
 
     try {
-        var image = req.file ? req.file.path : "" // it checks whether user wants to update his profile picture or not, if wants, req.file will contain a picture so image = req.file.path  
         const existingUser = await User.findOne({email: req.body.email})
         if (!existingUser) return res.send("user not found") // If somehow user wasn't found in database... xd
         if (existingUser.userImage != "") { // to remove last picture i first check if there was an old picture for sure. "" means there wasn't
@@ -73,26 +73,31 @@ router.patch('/', verify, upload.single('userImage'), async (req, res) => {
                 console.log("done")
                 if(err) console.log(err)
             })    
-        }
+        } 
 
         if (req.body.username != existingUser.username) { // If username and new username are not the same then i change invitations to show users his updated username and the same with friends
             patchInvitations(existingUser.username, req.body.username)
             patchFriends(existingUser.username, req.body.username)
         }
+        
+        const salt = await bcrypt.genSalt(10);
+
+        var image = req.file ? req.file.path : "" // it checks whether user wants to update his profile picture or not, if wants, req.file will contain a picture so image = req.file.path
+        const hashedPassword = await bcrypt.hash(req.body.password, salt)
 
         await User.findOneAndUpdate(
             { email: req.body.email },
             { 
                 $set: { 
                     username: req.body.username,
-                    password: req.body.password,
+                    password: hashedPassword,
                     userImage: image
                 }
             }
         )
         return res.json({
             username: req.body.username,
-            password: req.body.password,
+            password: hashedPassword,
             userImage: image
         })
     } catch(err) {
