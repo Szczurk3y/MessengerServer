@@ -2,6 +2,7 @@ const router = require('express').Router()
 const verify = require('./verify_token')
 const Joi = require('@hapi/joi')
 const User = require('../models/User')
+const Friend = require('../models/Friend')
 const Invitation = require('../models/Invitation')
 
 // TODO: change posts to: delete/get/and so on...
@@ -43,7 +44,6 @@ router.post('/invite', verify, async (req, res) => {
     if(error) return res.send(error.details[0].message)
     const recipient = await User.findOne({username: req.body.recipient})
     if(!recipient) return res.send("User not found")
-
     const invitation = new Invitation({
         sender: req.body.sender,
         recipient: recipient.username,

@@ -2,9 +2,12 @@ const express = require('express')
 const router = express.Router()
 const verify = require('./verify_token')
 var multer = require('multer')
-const User = require('../models/User')
 const Joi = require('@hapi/joi')
 const fs = require('fs')
+const User = require('../models/User')
+const Friends = require('../models/Friend')
+const Invitations = require('../models/Invitation')
+
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -19,9 +22,10 @@ var storage = multer.diskStorage({
 
 const updateValidation = data => {
     const schema = Joi.object({
-        username: Joi.string().alphanum().min(0).max(25).required(),
-        new_username: Joi.string().alphanum().min(3).max(25).required()
-    });
+        username: Joi.string().alphanum().min(3).max(25).required(),
+        email: Joi.string().min(6).max(255).email().required(),
+        password: Joi.string().min(3).max(255).required()
+    })
 
     return schema.validate(data);
 }
@@ -49,8 +53,6 @@ var upload = multer({
     fileFilter: fileFilter
 })
 
-
-
 router.patch('/', verify, upload.single('userImage'), async (req, res) => {  
     const { error } = updateValidation(req.body);
     if (error) {
@@ -60,10 +62,11 @@ router.patch('/', verify, upload.single('userImage'), async (req, res) => {
             })
         }
         return res.send(error.details[0].message)
-    } 
+    }
+
     try {
-        var image = req.file ? req.file.path : "" // it checks whether user wants to update his profile picture or not, if wante, req.file will hold a picture so image = req.file.path  
-        const existingUser = await User.findOne({username: req.body.username}); // It allows me to use later (10 lines below) unchanged a password, an email and an admin in order to commit update
+        var image = req.file ? req.file.path : "" // it checks whether user wants to update his profile picture or not, if wants, req.file will contain a picture so image = req.file.path  
+        const existingUser = await User.findOne({email: req.body.email})
         if (!existingUser) return res.send("user not found") // If somehow user wasn't found in database... xd
         if (existingUser.userImage != "") { // to remove last picture i first check if there was an old picture for sure. "" means there wasn't
             fs.unlink(`${existingUser.userImage}`, (err) => {
@@ -72,26 +75,68 @@ router.patch('/', verify, upload.single('userImage'), async (req, res) => {
             })    
         }
 
-        const new_user = new User({
-            username: req.body.new_username,
-            userImage: image,
-            // Below parameters you can't update easily 
-            password: existingUser.password,
-            email: existingUser.email,
-            admin: existingUser.admin
+        if (req.body.username != existingUser.username) { // If username and new username are not the same then i change invitations to show users his updated username and the same with friends
+            patchInvitations(existingUser.username, req.body.username)
+            patchFriends(existingUser.username, req.body.username)
+        }
+
+        await User.findOneAndUpdate(
+            { email: req.body.email },
+            { 
+                $set: { 
+                    username: req.body.username,
+                    password: req.body.password,
+                    userImage: image
+                }
+            }
+        )
+        return res.json({
+            username: req.body.username,
+            password: req.body.password,
+            userImage: image
         })
-
-        await User.findOneAndDelete({ username: req.body.username })
-        await new_user.save()
-
-        return res.json(new_user)
     } catch(err) {
         console.log(err)
         return res.send(err)
     }
-
-    
 })
 
+async function patchInvitations(old_username, new_username) {
+    try {
+        await Invitations.updateMany(
+            { recipient: old_username },
+            { 
+                $set: { recipient: new_username }
+            }
+        )
+        await Invitations.updateMany(
+            { sender: old_username },
+            {
+                $set: { sender: new_username }
+            } 
+        )
+    } catch(err) {
+        return err
+    }
+}
+
+async function patchFriends(old_username, new_username) {
+    try {
+        await Friends.updateMany(
+            { friend: old_username },
+            {
+                $set: { friend: new_username }
+            }
+        )
+        await Friends.updateMany(
+            { username: old_username },
+            {
+                $set: { username: new_username }
+            }
+        )
+    } catch (err) {
+        return err
+    }
+}
 
 module.exports = router
