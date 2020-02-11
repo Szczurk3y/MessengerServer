@@ -23,9 +23,9 @@ var storage = multer.diskStorage({
 
 const updateValidation = data => {
     const schema = Joi.object({
-        username: Joi.string().alphanum().min(3).max(25).required(),
+        username: Joi.string().alphanum().min(3).max(25),
         email: Joi.string().min(6).max(255).email().required(),
-        password: Joi.string().min(3).max(255).required()
+        password: Joi.string().min(3).max(255)
     })
 
     return schema.validate(data);
@@ -56,6 +56,9 @@ var upload = multer({
 
 router.patch('/', verify, upload.single('userImage'), async (req, res) => {  
     const { error } = updateValidation(req.body);
+
+    console.log(`ELO ${req.body.username}`)
+
     if (error) {
         if (req.file) { // if error occure, code below will remove saved picture to avoid rendundancy
             fs.unlink(req.file.path, (err) => {
@@ -74,35 +77,37 @@ router.patch('/', verify, upload.single('userImage'), async (req, res) => {
                 if(err) console.log(err)
             })    
         } 
-
-        if (req.body.username != existingUser.username) { // If username and new username are not the same then i change invitations to show users his updated username and the same with friends
-            patchInvitations(existingUser.username, req.body.username)
-            patchFriends(existingUser.username, req.body.username)
-        }
-        
         const salt = await bcrypt.genSalt(10);
 
-        var image = req.file ? req.file.path : "" // it checks whether user wants to update his profile picture or not, if wants, req.file will contain a picture so image = req.file.path
-        const hashedPassword = await bcrypt.hash(req.body.password, salt)
+        var new_image = req.file ? req.file.path : "" // it checks whether user wants to update his profile picture or not, if wants, req.file will contain a picture so image = req.file.path
+        const new_hashedPassword = req.body.password ? await bcrypt.hash(req.body.password, salt) : existingUser.password // it checks whether user wants to update his password or not
+        const new_username = req.body.username ? req.body.username : existingUser.username // it checks whether user wants to update his username or not
 
-        await User.findOneAndUpdate(
-            { email: req.body.email },
+        const updatedUser = await User.findOneAndUpdate( // Finding and updating user
+            { email: req.body.email }, // Parameter to find
             { 
-                $set: { 
-                    username: req.body.username,
-                    password: hashedPassword,
-                    userImage: image
+                $set: { // set new parameters
+                    username: new_username,
+                    password: new_hashedPassword,
+                    userImage: new_image
                 }
             }
         )
-        return res.json({
-            username: req.body.username,
-            password: hashedPassword,
-            userImage: image
-        })
+
+        if (new_username != existingUser.username) { // If username and new username are not the same then i change invitations to show users his updated username and the same with friends
+            patchInvitations(existingUser.username, new_username)
+            patchFriends(existingUser.username, new_username)
+        }
+        
+        return res.json(
+            new_username,
+            new_hashedPassword,
+            new_image,
+            {message: "Successfully updated!"}
+        )
     } catch(err) {
         console.log(err)
-        return res.send(err)
+        return res.json(err)
     }
 })
 
