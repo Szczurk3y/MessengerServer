@@ -9,7 +9,6 @@ const Friends = require('../models/Friend')
 const Invitations = require('../models/Invitation')
 const bcrypt = require('bcryptjs')
 
-
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './uploads/')
@@ -21,25 +20,8 @@ var storage = multer.diskStorage({
     }
 })
 
-const updateValidation = data => {
-    const schema = Joi.object({
-        username: Joi.string().alphanum().min(3).max(25),
-        email: Joi.string().min(6).max(255).email().required(),
-        password: Joi.string().min(3).max(255)
-    })
-
-    return schema.validate(data);
-}
-
 var fileFilter = async (req, file, cb) => {
-    if (req.body.username === req.body.new_username) { // If an user wants just to perform a picture change, he will put his current username as a new_username, so to avoid error later, i signify new_username to current username
-        req.body.new_username = req.body.username
-    } else {
-        var userExists = await User.findOne({ username: req.body.new_username })
-    }
-    if (userExists) {
-        cb(new Error('This username is already taken'), false)
-    } else if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+    if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
         cb(null, true)
     } else {
         cb(new Error("File must be JPEG/PNG").message, false) // TODO: error message
@@ -54,36 +36,54 @@ var upload = multer({
     fileFilter: fileFilter
 })
 
-router.patch('/', verify, upload.single('userImage'), async (req, res) => {  
-    const { error } = updateValidation(req.body);
+router.post('/', verify, upload.single('image'), async (req, res) => {
+    var response
+    const existingUser = await User.findOne({ email: req.body.email }) // Getting user before committing updates
 
-    console.log(`ELO ${req.body.username}`)
-
+    var { error } = updateValidation(req.body);
     if (error) {
+        response = { 
+            message: error.details[0].message,
+            isUpdated: false
+        }
+        res.json(response)
+    }
+
+    var doesUserAlreadyExist = false
+    if (req.body.username && req.body.username != existingUser.username) { // It checks whether desire new username is already taken by someone else
+        doesUserAlreadyExist = await User.findOne({ username: req.body.username })
+        if (doesUserAlreadyExist) {
+            response = { 
+                message: "This username is already taken",
+                isUpdated: false
+            }
+            res.json(response)
+        }
+    }
+
+    if (error || doesUserAlreadyExist) {
         if (req.file) { // if error occure, code below will remove saved picture to avoid rendundancy
             fs.unlink(req.file.path, (err) => {
                 if(err) console.log(err)
             })
         }
-        return res.send(error.details[0].message)
+        return
     }
 
     try {
-        const existingUser = await User.findOne({email: req.body.email})
-        if (!existingUser) return res.send("user not found") // If somehow user wasn't found in database... xd
-        if (existingUser.userImage != "") { // to remove last picture i first check if there was an old picture for sure. "" means there wasn't
+        if (existingUser.userImage != "") { // to remove previous picture i first check if there was an old picture for sure. "" means there wasn't
             fs.unlink(`${existingUser.userImage}`, (err) => {
-                console.log("done")
+                console.log("Deleted previous image")
                 if(err) console.log(err)
             })    
-        } 
+        }
+
         const salt = await bcrypt.genSalt(10);
 
-        var new_image = req.file ? req.file.path : "" // it checks whether user wants to update his profile picture or not, if wants, req.file will contain a picture so image = req.file.path
+        var new_image = req.file ? req.file.path : existingUser.userImage // it checks whether user wants to update his profile picture or not, if wants, req.file will contain a picture so image = req.file.path
         const new_hashedPassword = req.body.password ? await bcrypt.hash(req.body.password, salt) : existingUser.password // it checks whether user wants to update his password or not
         const new_username = req.body.username ? req.body.username : existingUser.username // it checks whether user wants to update his username or not
-
-        const updatedUser = await User.findOneAndUpdate( // Finding and updating user
+        await User.findOneAndUpdate( // Finding and updating user
             { email: req.body.email }, // Parameter to find
             { 
                 $set: { // set new parameters
@@ -98,16 +98,18 @@ router.patch('/', verify, upload.single('userImage'), async (req, res) => {
             patchInvitations(existingUser.username, new_username)
             patchFriends(existingUser.username, new_username)
         }
-        
-        return res.json(
-            new_username,
-            new_hashedPassword,
-            new_image,
-            {message: "Successfully updated!"}
-        )
+
+        response = { 
+            message: "Successfully updated",
+            isUpdated: true
+        }
+        return res.json(response)
     } catch(err) {
-        console.log(err)
-        return res.json(err)
+        response = { 
+            message: err,
+            isUpdated: false
+        }
+        return res.json(response)
     }
 })
 
@@ -148,5 +150,15 @@ async function patchFriends(old_username, new_username) {
         return err
     }
 }
+
+const updateValidation = data => {
+    const schema = Joi.object({
+        username: Joi.string().alphanum().min(3).max(25).optional(),
+        email: Joi.string().min(6).max(255).email().required(),
+        password: Joi.string().min(3).max(255).optional()
+    })
+    return schema.validate(data);
+}
+
 
 module.exports = router

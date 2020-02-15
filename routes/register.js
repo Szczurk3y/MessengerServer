@@ -14,7 +14,6 @@ const registerValidation = data => {
 }
 
 router.post('/', async (req, res) => {
-    console.log(`${req.body.username}\n${req.body.email}\n${req.body.password}`);
     const { error } = registerValidation(req.body);
     if (error) return res.json({message: error.details[0].message });
     const emailExists = await User.findOne({ email: req.body.email });

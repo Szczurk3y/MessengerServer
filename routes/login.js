@@ -25,6 +25,7 @@ router.post('/', async (req, res) => {
     const user = await User.findOne({ username: req.body.username })
     if (!user) return res.json({ message: "User not found" })
 
+
     //3rd step --> Comparing passwords
     const valid_passwords = await bcrypt.compare(req.body.password, user.password) //first argument must be a 'what password is given' and the second argument is like 'stored(correct) password'. If it's swapped, comparison wouldn't work 
     if (!valid_passwords) return res.json({ message: "Wrong password" })
@@ -34,7 +35,8 @@ router.post('/', async (req, res) => {
     return res.json({
         message: "You are now logged in!",
         isLogged: true,
-        token: token
+        token: token,
+        email: user.email
     })
 })
 

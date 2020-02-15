@@ -9,7 +9,6 @@ const Invitation = require('../models/Invitation')
 router.post('/', verify, async (req, res) => {
     try {
         const friends = await Friend.find({username: req.body.username})
-        console.log(friends)
         return res.json(friends)
     } catch(err) {
         return res.json(err.message)
