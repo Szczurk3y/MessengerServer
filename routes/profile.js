@@ -36,7 +36,7 @@ var upload = multer({
     fileFilter: fileFilter
 })
 
-router.post('/', verify, upload.single('image'), async (req, res) => {
+router.post('/update', verify, upload.single('image'), async (req, res) => {
     var response
     const existingUser = await User.findOne({ email: req.body.email }) // Getting user before committing updates
 
@@ -71,7 +71,9 @@ router.post('/', verify, upload.single('image'), async (req, res) => {
     }
 
     try {
-        if (existingUser.userImage != "") { // to remove previous picture i first check if there was an old picture for sure. "" means there wasn't
+        // to remove previous picture i first check if there was an old picture 
+        // for sure. "" means there wasn't
+        if (existingUser.userImage != "") { 
             fs.unlink(`${existingUser.userImage}`, (err) => {
                 console.log("Deleted previous image")
                 if(err) console.log(err)
