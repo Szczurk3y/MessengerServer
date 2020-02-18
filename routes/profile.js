@@ -40,11 +40,21 @@ var upload = multer({
 
 router.get('/avatar', verify, async (req, res) => {
     const existingUser = await User.findOne({ username: req.query.username })
-    fs.readFile(existingUser.userImage, (err, image) => {
-        res.header({"Content-Type": "image/jpeg"})
-    
-        new BufferStream(image).pipe(res)
+
+    var readStream = fs.createReadStream(existingUser.userImage)
+
+    // The property way to send image:
+    readStream.on('open', () => {
+        readStream.pipe(res)
     })
+
+    readStream.on('error', () => {
+        res.end(err)
+    })
+    // Also another way:
+    // fs.readFile(existingUser.userImage, (err, image) => {
+    //     res.send(image)
+    // })
 })
 
 router.post('/update', verify, upload.single('image'), async (req, res) => {    

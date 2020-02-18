@@ -2,13 +2,6 @@ var stream = require( "stream" );
 var util = require( "util" );
 
 function BufferStream( source ) {
-
-	if ( ! Buffer.isBuffer( source ) ) {
-
-		throw( new Error( "Source must be a buffer." ) );
-
-	}
-
 	// Super constructor.
 	stream.Readable.call( this );
 
