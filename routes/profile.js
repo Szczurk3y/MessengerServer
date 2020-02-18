@@ -8,8 +8,6 @@ const User = require('../models/User')
 const Friends = require('../models/Friend')
 const Invitations = require('../models/Invitation')
 const bcrypt = require('bcryptjs')
-const Blob = require('node-blob')
-const BufferStream = require('../MyFunctions/BufferStream')
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -41,20 +39,22 @@ var upload = multer({
 router.get('/avatar', verify, async (req, res) => {
     const existingUser = await User.findOne({ username: req.query.username })
 
-    var readStream = fs.createReadStream(existingUser.userImage)
-
-    // The property way to send image:
-    readStream.on('open', () => {
-        readStream.pipe(res)
-    })
-
-    readStream.on('error', () => {
-        res.end(err)
-    })
-    // Also another way:
-    // fs.readFile(existingUser.userImage, (err, image) => {
-    //     res.send(image)
-    // })
+    if (existingUser != "") {
+        var readStream = fs.createReadStream(existingUser.userImage)
+    
+        // The best way to send an image:
+        readStream.on('open', () => {
+            readStream.pipe(res)
+        })
+    
+        readStream.on('error', () => {
+            res.end(err)
+        })
+        // Also another way:
+        // fs.readFile(existingUser.userImage, (err, image) => {
+        //     res.send(image)
+        // })
+    }
 })
 
 router.post('/update', verify, upload.single('image'), async (req, res) => {    
