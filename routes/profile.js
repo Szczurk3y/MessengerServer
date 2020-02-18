@@ -8,6 +8,8 @@ const User = require('../models/User')
 const Friends = require('../models/Friend')
 const Invitations = require('../models/Invitation')
 const bcrypt = require('bcryptjs')
+const Blob = require('node-blob')
+const BufferStream = require('../MyFunctions/BufferStream')
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -36,13 +38,22 @@ var upload = multer({
     fileFilter: fileFilter
 })
 
-router.post('/update', verify, upload.single('image'), async (req, res) => {
-    var response
-    const existingUser = await User.findOne({ email: req.body.email }) // Getting user before committing updates
+router.get('/avatar', verify, async (req, res) => {
+    const existingUser = await User.findOne({ username: req.query.username })
+    fs.readFile(existingUser.userImage, (err, image) => {
+        res.header({"Content-Type": "image/jpeg"})
+    
+        new BufferStream(image).pipe(res)
+    })
+})
+
+router.post('/update', verify, upload.single('image'), async (req, res) => {    
+    // Getting user before committing updates
+    const existingUser = await User.findOne({ email: req.body.email }) 
 
     var { error } = updateValidation(req.body);
     if (error) {
-        response = { 
+        var response = { 
             message: error.details[0].message,
             isUpdated: false
         }
@@ -53,7 +64,7 @@ router.post('/update', verify, upload.single('image'), async (req, res) => {
     if (req.body.username && req.body.username != existingUser.username) { // It checks whether desire new username is already taken by someone else
         doesUserAlreadyExist = await User.findOne({ username: req.body.username })
         if (doesUserAlreadyExist) {
-            response = { 
+            var response = { 
                 message: "This username is already taken",
                 isUpdated: false
             }
@@ -82,7 +93,7 @@ router.post('/update', verify, upload.single('image'), async (req, res) => {
 
         const salt = await bcrypt.genSalt(10);
 
-        var new_image = req.file ? req.file.path : existingUser.userImage // it checks whether user wants to update his profile picture or not, if wants, req.file will contain a picture so image = req.file.path
+        const new_image = req.file ? req.file.path : existingUser.userImage // it checks whether user wants to update his profile picture or not, if wants, req.file will contain a picture so image = req.file.path
         const new_hashedPassword = req.body.password ? await bcrypt.hash(req.body.password, salt) : existingUser.password // it checks whether user wants to update his password or not
         const new_username = req.body.username ? req.body.username : existingUser.username // it checks whether user wants to update his username or not
         await User.findOneAndUpdate( // Finding and updating user
@@ -101,19 +112,21 @@ router.post('/update', verify, upload.single('image'), async (req, res) => {
             patchFriends(existingUser.username, new_username)
         }
 
-        response = { 
+        var response = { 
             message: "Successfully updated",
             isUpdated: true
         }
         return res.json(response)
     } catch(err) {
-        response = { 
+        var response = { 
             message: err,
             isUpdated: false
         }
         return res.json(response)
     }
 })
+
+
 
 async function patchInvitations(old_username, new_username) {
     try {
