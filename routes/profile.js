@@ -24,7 +24,7 @@ var fileFilter = async (req, file, cb) => {
     if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
         cb(null, true)
     } else {
-        cb(new Error("File must be JPEG/PNG").message, false) // TODO: error message
+        cb(null, false)
     }
 }
 
@@ -48,7 +48,7 @@ router.get('/avatar', verify, async (req, res) => {
         })
     
         readStream.on('error', () => {
-            res.end(err)
+            res.end("error")
         })
         // Also another way:
         // fs.readFile(existingUser.userImage, (err, image) => {
@@ -57,7 +57,7 @@ router.get('/avatar', verify, async (req, res) => {
     }
 })
 
-router.post('/update', verify, upload.single('image'), async (req, res) => {    
+router.post('/update', verify, upload.single('image'), async (req, res) => {
     // Getting user before committing updates
     const existingUser = await User.findOne({ email: req.body.email }) 
 
@@ -82,10 +82,11 @@ router.post('/update', verify, upload.single('image'), async (req, res) => {
         }
     }
 
+    // if error occure, code below will remove saved picture to avoid rendundancy
     if (error || doesUserAlreadyExist) {
-        if (req.file) { // if error occure, code below will remove saved picture to avoid rendundancy
+        if (req.file) { 
             fs.unlink(req.file.path, (err) => {
-                if(err) console.log(err)
+                if(err) existingUser.userImage = ""
             })
         }
         return
@@ -96,8 +97,8 @@ router.post('/update', verify, upload.single('image'), async (req, res) => {
         // for sure. "" means there wasn't
         if (existingUser.userImage != "") { 
             fs.unlink(`${existingUser.userImage}`, (err) => {
-                console.log("Deleted previous image")
-                if(err) console.log(err)
+                if(err) existingUser.userImage = ""
+                else console.log("Deleted previous image")
             })    
         }
 
