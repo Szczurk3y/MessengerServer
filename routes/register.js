@@ -2,6 +2,7 @@ const router = require('express').Router();
 const Joi = require('@hapi/joi');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose')
 
 const registerValidation = data => {
     const schema = Joi.object({
@@ -32,8 +33,24 @@ router.post('/', async (req, res) => {
         password: hashedPassword
     });
 
-
     try {
+        await mongoose.connection.createCollection(req.body.username, {
+            validator: { $jsonSchema: {
+                properties: {
+                    bsonType: "object",
+                    required: ["recipient", "message"],
+                    recipient: {
+                        bsonType: "string",
+                    },
+                    message: {
+                        bsonType: "string",
+                    },
+                    status: {
+                        enum: ["seen", "unseen"]
+                    }
+                }
+            }}
+        })
         await user.save().then(() => {
             return res.json({
                 message: "Successfully registered",
@@ -43,7 +60,6 @@ router.post('/', async (req, res) => {
     } catch(err) {
         return res.json({ message: err })
     }
-
 });
 
 module.exports = router;
