@@ -1,7 +1,6 @@
 const router = require('express').Router()
 const verify = require('./verify_token')
 const Friend = require('../models/Friend')
-const Joi = require('@hapi/joi')
 const Invitation = require('../models/Invitation')
 
 // TODO: change posts to: delete/get/and so on...

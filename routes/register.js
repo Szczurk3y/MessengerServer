@@ -33,24 +33,9 @@ router.post('/', async (req, res) => {
         password: hashedPassword
     });
 
-    try {
-        await mongoose.connection.createCollection(req.body.username, {
-            validator: { $jsonSchema: {
-                properties: {
-                    bsonType: "object",
-                    required: ["recipient", "message"],
-                    recipient: {
-                        bsonType: "string",
-                    },
-                    message: {
-                        bsonType: "string",
-                    },
-                    status: {
-                        enum: ["seen", "unseen"]
-                    }
-                }
-            }}
-        })
+    try { 
+        await mongoose.connection.createCollection(req.body.username)
+
         await user.save().then(() => {
             return res.json({
                 message: "Successfully registered",

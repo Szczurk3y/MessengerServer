@@ -34,6 +34,7 @@ const login = require('./routes/login')
 const invite = require('./routes/invitations')
 const friend = require('./routes/friends')
 const profile = require('./routes/profile')
+const messaging = require('./routes/messaging')
 
 //Middlewares
 app.use(express.json())
@@ -45,6 +46,7 @@ app.use('/api/user/login', login)
 app.use('/api/user/invitations', invite)
 app.use('/api/user/friends', friend)
 app.use('/api/user/profile/', profile)
+app.use('/api/user/messaging', messaging)
 
 const PORT = process.env.PORT || 1234
  
