@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
 
     try { 
         await mongoose.connection.createCollection(req.body.username)
-
+        
         await user.save().then(() => {
             return res.json({
                 message: "Successfully registered",

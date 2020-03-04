@@ -1,20 +1,14 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
-const Message = new Schema({
-    recipient: {
-        type: String,
-        min: 3,
-        max: 25,
-        required: true
-    },
-    message: {
-        type: String,
-        required: true
+module.exports = (room) => {
+    const Message = new Schema({
+        message: String,
+        date: String
+    })
+    if (!mongoose.models[`${room}`]) {
+        return mongoose.model(`${room}`, Message, `${room}`);
+    } else {
+        return mongoose.models[`${room}`]
     }
-})
-
-
-const MessageSchema = mongoose.model('Message', Message);
-
-module.exports = MessageSchema;
+};

@@ -30,8 +30,7 @@ app.use('/api/user/profile/', profile)
 app.use('/api/user/messaging', messaging)
 
 //Connecting to the DB
-mongoose.connect('mongodb://localhost/messenger', { useNewUrlParser: true, useUnifiedTopology: true })
-mongoose.set('useFindAndModify', false);
+mongoose.connect('mongodb://localhost/messenger', { useNewUrlParser: true, useUnifiedTopology: false })
 mongoose.connection.once('open', () => {
     console.log('Connection has been made')
 }).on('error', (err) => console.log(`error:\n${err}`))
