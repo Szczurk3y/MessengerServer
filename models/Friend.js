@@ -13,6 +13,10 @@ const FriendSchema = new Schema({
         min: 3,
         max: 25,
         required: true
+    },
+    chat_room: {
+        type: String,
+        required: true
     }
 })
 

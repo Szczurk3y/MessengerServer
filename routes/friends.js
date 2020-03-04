@@ -2,6 +2,7 @@ const router = require('express').Router()
 const verify = require('./verify_token')
 const Friend = require('../models/Friend')
 const Invitation = require('../models/Invitation')
+const bcrypt = require('bcryptjs')
 
 // TODO: change posts to: delete/get/and so on...
 
@@ -32,16 +33,23 @@ router.post('/delete', verify, async (req, res) => {
 
 router.post('/add', verify, async (req, res) => {
     try {
+        const genSalt = await bcrypt.genSalt(10)
+        const room = await bcrypt.hash(req.body.username + req.body.friend, genSalt)
+        
         let friend = new Friend({
             username: req.body.username,
-            friend: req.body.friend
+            friend: req.body.friend,
+            chat_room: room
         })
         await friend.save()
+        
         friend = new Friend({
             username: req.body.friend,
-            friend: req.body.username
+            friend: req.body.username,
+            chat_room: room
         })
         await friend.save()
+
         await Invitation.findOneAndDelete({
             sender: req.body.friend,
             recipient: req.body.username
