@@ -3,6 +3,7 @@ const Schema = mongoose.Schema
 
 module.exports = (room) => {
     const Message = new Schema({
+        sender: String,
         message: String,
         date: String
     })
