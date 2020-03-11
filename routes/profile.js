@@ -36,9 +36,8 @@ var upload = multer({
     fileFilter: fileFilter
 })
 
-router.get('/avatar', verify, async (req, res) => {
+router.get('/avatar', async (req, res) => {
     const existingUser = await User.findOne({ username: req.query.username })
-
     if (existingUser != "") {
         var readStream = fs.createReadStream(existingUser.userImage)
     

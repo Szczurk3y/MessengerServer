@@ -12,6 +12,7 @@ const login = require('./routes/login')
 const invite = require('./routes/invitations')
 const friend = require('./routes/friends')
 const profile = require('./routes/profile')
+const messages = require('./routes/messages')
 
 //Importing sockets
 require('./sockets/messaging_sockets')(io)
@@ -25,7 +26,8 @@ app.use('/api/user/register', register)
 app.use('/api/user/login', login)
 app.use('/api/user/invitations', invite)
 app.use('/api/user/friends', friend)
-app.use('/api/user/profile/', profile)
+app.use('/api/user/profile', profile)
+app.use('/api/user/messages', messages)
 
 //Connecting to the DB
 mongoose.connect('mongodb://localhost/messenger', { useNewUrlParser: true, useUnifiedTopology: true })
