@@ -23,14 +23,19 @@ router.get('/chats', verify, async(req, res) => {
 router.get('/', verify, async (req, res) => {
     const username = req.query.username
     const friendname = req.query.friendname
-    const Message = require('../models/Message')(friendname)
-    
+
     await mongoose.connect(`mongodb://localhost/${username}`, { useNewUrlParser: true, useUnifiedTopology: true })
 
-    const data = Message.find({})
+    const Message = require('../models/Message')(friendname)
+
+    try {
+        var data = await Message.find({})
+    } catch (err) {
+        console.log(err)
+    }
 
     await mongoose.connect('mongodb://localhost/messenger', { useNewUrlParser: true, useUnifiedTopology: true })
-
+    
     console.log(data)
     return res.json(data)
 })
